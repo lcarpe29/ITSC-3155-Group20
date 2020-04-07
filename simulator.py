@@ -113,7 +113,7 @@ class Simulator(tk.Frame):
     def signinProcess(self):
         if (len(self.entrySigninEmail.get()) != 0) and (len(self.entrySigninPassword.get()) != 0):
             email = self.entrySigninEmail.get()
-            self.cursor.execute("SELECT userPassword "
+            self.cursor.execute("SELECT userFirstName, userLastName, userPassword, userBalance "
                                 "FROM Users "
                                 "WHERE userEmail = '" + email + "';"
                                 )
@@ -121,9 +121,10 @@ class Simulator(tk.Frame):
             passwordCheck = self.cursor.fetchall()
 
             for row in passwordCheck:
-                password = row[0]
+                password = row[2]
 
             if password == self.entrySigninPassword.get():
+                # todo add userInstance
                 self.homeWindow()
             else:
                 # todo add popup
