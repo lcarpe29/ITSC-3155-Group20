@@ -3,7 +3,7 @@ import mysql.connector
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    passwd="********",
+    passwd="7NJn-N\\ar_<3PS~T",
     database="bankingsimulator"
 )
 
@@ -18,6 +18,7 @@ mycursor.execute(
     "userID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,"
     "userFirstName VARCHAR(20) NOT NULL,"
     "userLastName VARCHAR(20) NOT NULL,"
+    "userEmail VARCHAR(40) NOT NULL,"
     "userPassword VARCHAR(20) NOT NULL,"
     "userBalance INT DEFAULT 0"
     ")"
