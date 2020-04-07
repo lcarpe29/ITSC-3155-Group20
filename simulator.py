@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.font as font
 import mysql.connector
 
 
@@ -8,6 +9,7 @@ class Simulator(tk.Frame):
         self.master = master
         master.title('Banking Simulation')
         master.geometry('500x500')
+        master.configure(bg="black")
         self.pack()
         self.db = mysql.connector.connect(
             host="localhost",
@@ -19,19 +21,25 @@ class Simulator(tk.Frame):
         self.signinWindow()
 
     def signinWindow(self):
-        self.signinFrame = tk.Frame(self)
+        self.signinFrame = tk.Frame(self, bg='black')
         self.signinFrame.pack()
 
-        tk.Label(self.signinFrame, text="Enter Email: ").pack()
+        myfont = font.Font(size=30)
+        tk.Label(self.signinFrame, text="49er Credit Union", fg="green", bg="black", font=myfont).pack()
+
+        tk.Label(self.signinFrame, text="Enter Email: ", bg="black", fg='#ffcc00').pack()
         self.entrySigninEmail = tk.Entry(self.signinFrame)
         self.entrySigninEmail.pack()
-        tk.Label(self.signinFrame, text="Enter Password: ").pack()
+        tk.Label(self.signinFrame, text="Enter Password: ", bg="black", fg='#ffcc00').pack()
         self.entrySigninPassword = tk.Entry(self.signinFrame, show='*')
         self.entrySigninPassword.pack()
 
-        tk.Button(self.signinFrame, text="Sign In", command=self.signinProcess).pack(side="left")
-        tk.Button(self.signinFrame, text="Sign Up", command=self.signupWindow).pack(side="right")
-        tk.Button(self.signinFrame, text="Quit", fg="red", command=self.master.destroy).pack(side="bottom")
+        btnSignin = tk.Button(self.signinFrame, text="Sign In", highlightbackground='#ffcc00', fg='green', command=self.signinProcess)
+        btnSignin.pack(side="left")
+        btnSignup = tk.Button(self.signinFrame, text="Sign Up", highlightbackground='#ffcc00', fg='green', command=self.signupWindow)
+        btnSignup.pack(side="right")
+        btnQuit = tk.Button(self.signinFrame, text="Quit", highlightbackground='#ffcc00', fg="red", command=self.master.destroy)
+        btnQuit.pack(side="bottom")
 
     def homeWindow(self):
         self.signinFrame.destroy()
@@ -103,19 +111,19 @@ class Simulator(tk.Frame):
                 print("Error")
 
     def signinProcess(self):
-        if ((len(self.entrySigninEmail.get()) != 0) and (len(self.entrySigninPassword.get()) != 0)):
+        if (len(self.entrySigninEmail.get()) != 0) and (len(self.entrySigninPassword.get()) != 0):
             email = self.entrySigninEmail.get()
             self.cursor.execute("SELECT userPassword "
                                 "FROM Users "
                                 "WHERE userEmail = '" + email + "';"
                                 )
-            userPassword = self.cursor.fetchone()
 
-            while userPassword is not None:
-                userPassword = self.cursor.fetchone()
-            print(userPassword)
-            print(self.entrySigninPassword)
-            if (userPassword == self.entrySigninPassword.get()):
+            passwordCheck = self.cursor.fetchall()
+
+            for row in passwordCheck:
+                password = row[0]
+
+            if password == self.entrySigninPassword.get():
                 self.homeWindow()
             else:
                 # todo add popup
