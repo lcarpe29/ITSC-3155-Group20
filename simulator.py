@@ -2,6 +2,8 @@ import tkinter as tk
 import tkinter.font as font
 import mysql.connector
 
+from user import User
+
 
 class Simulator(tk.Frame):
     def __init__(self, master=None):
@@ -14,7 +16,7 @@ class Simulator(tk.Frame):
         self.db = mysql.connector.connect(
             host="localhost",
             user="root",
-            passwd="7NJn-N\\ar_<3PS~T",
+            passwd="Senior17-",
             database="bankingsimulator"
         )
         self.cursor = self.db.cursor()
@@ -46,7 +48,13 @@ class Simulator(tk.Frame):
         self.homeFrame = tk.Frame(self)
         self.homeFrame.pack()
 
-        tk.Label(self.homeFrame, text="This will be money").pack()
+        myfont = font.Font(size=30)
+        tk.Label(self.homeFrame, text="49er Credit Union", fg="green", bg="black", font=myfont).pack()
+
+        myfont = font.Font(size = 20)
+        tk.Label(self.homeFrame, text="Welcome, " + self.userInstance.get_firstname() + self.userInstance.get_lastname(),
+                 fg="green", bg="black", font=myfont).pack()
+        tk.Label(self.homeFrame, text="Balance: " + str(self.userInstance.get_balance()), bg="black", fg='#ffcc00').pack()
 
     def signupWindow(self):
         self.signinFrame.destroy()
@@ -87,6 +95,8 @@ class Simulator(tk.Frame):
             email = self.entrySignupEmail.get()
             password = self.entrySignupPassword.get()
 
+
+
             insertCommand = "INSERT INTO Users (userFirstName, userLastName, userEmail, userPassword) " \
                             "VALUES( '" + firstName + "', '" + lastName + "', '" + email + "', '" + password + "');"
             self.cursor.execute(insertCommand)
@@ -122,9 +132,14 @@ class Simulator(tk.Frame):
 
             for row in passwordCheck:
                 password = row[2]
+                firstName = row[0]
+                lastName = row[1]
+                balance = row[3]
 
             if password == self.entrySigninPassword.get():
                 # todo add userInstance
+                self.userInstance = User(firstName, lastName, password, balance)
+
                 self.homeWindow()
             else:
                 # todo add popup
