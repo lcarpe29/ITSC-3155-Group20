@@ -16,7 +16,7 @@ class Simulator(tk.Frame):
         self.db = mysql.connector.connect(
             host="localhost",
             user="root",
-            passwd="Senior17-",
+            passwd="enterpassword",
             database="bankingsimulator"
         )
         self.cursor = self.db.cursor()
