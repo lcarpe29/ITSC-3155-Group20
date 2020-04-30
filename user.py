@@ -1,24 +1,38 @@
 import mysql.connector
 
 
+
+
 class User:
 
-    def __init__(self, firstname, lastname, password, balance, accountid):
+    def __init__(self, firstname, lastname, password, balance, accountid, accountArr):
         self.firstname = firstname
         self.lastname = lastname
         self.password = password
         self.balance = balance
         self.accountid = accountid
+        self.accountArr = accountArr
         self.db = mysql.connector.connect(
             host="localhost",
             user="root",
-            passwd="7NJn-N\\ar_<3PS~T",
+            passwd="enterpassword",
             database="bankingsimulator"
         )
         self.cursor = self.db.cursor()
 
-    # getter methods
 
+    def perform_transaction(self, date, type, amount, account1, account2):
+
+        if (type == "withdraw"):
+            account1.withdraw_funds(date, type, amount, self.accountid, )
+        if(type == "deposit"):
+            account1.deposit_funds(date, type, amount, self.accountid, )
+        if(type == "transfer"):
+            account1.withdraw_funds(date, type, amount, self.accountid, )
+            account2.deposit_funds(date, type, amount, self.accountid, )
+
+
+    #getter methods
     def get_firstname(self):
         return self.firstname
 

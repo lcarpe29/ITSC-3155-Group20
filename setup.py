@@ -3,7 +3,7 @@ import mysql.connector
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    passwd="7NJn-N\\ar_<3PS~T"
+    passwd="enterpassword"
 )
 
 mycursor = mydb.cursor()
@@ -19,17 +19,6 @@ mycursor.execute(
     "userLastName VARCHAR(20) NOT NULL,"
     "userEmail VARCHAR(40) NOT NULL,"
     "userPassword VARCHAR(20) NOT NULL,"
-    "userBalance FLOAT DEFAULT 0,"
-    "admin INT DEFAULT NULL"
+    "userBalance INT DEFAULT 0"
     ")"
 )
-insertCommand = "INSERT INTO Users (userFirstName, userLastName, userEmail, userPassword, admin) " \
-                "VALUES( 'root', 'root', 'root@uncc.edu', 'root123', 1);"
-
-mycursor.execute(insertCommand)
-
-query = """UPDATE Users
-        SET userBalance = 200
-        WHERE userID = 1;"""
-mycursor.execute(query)
-mydb.commit()

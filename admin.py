@@ -30,8 +30,8 @@ class Admin:
     def set_password(self, x):
         self.password = x
 
-    def user_withdraw(self, user, amount):
-        user.set_balance(float(user.get_balance()) - amount)
+    def user_withdraw(self, date, user, amount):
+        user.perform_transaction(date, "withdraw", amount)
 
-    def user_deposit(self, user, amount):
-        user.set_balance(float(user.get_balance()) + amount)
+    def user_deposit(self, date, user, amount):
+        user.perform_transaction(date, "deposit", amount)
