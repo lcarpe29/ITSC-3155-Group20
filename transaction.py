@@ -31,7 +31,8 @@ class Transaction:
 
     def record_transaction(self):
         insertCommand = "INSERT INTO Transactions (userID, transactDate, transactType, transactAmount) " \
-                        "VALUES( " + str(self.accountid) + ", '" + self.date + "', '" + self.type + "', " + str(self.amount) + ")"
+                        "VALUES( " + str(self.accountid) + ", '" + self.date + "', '" + self.type + "', " \
+                        + str(self.amount) + ")"
         self.cursor.execute(insertCommand)
         self.db.commit()
 

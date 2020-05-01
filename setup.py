@@ -28,7 +28,7 @@ mycursor.execute(
     "CREATE TABLE Transactions ("
     "userID INT NOT NULL,"
     "transactDate VARCHAR(10),"
-    "transactType VARCHAR(10),"
+    "transactType VARCHAR(40),"
     "transactAmount FLOAT"
     ")"
 )

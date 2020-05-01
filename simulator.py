@@ -84,8 +84,10 @@ class Simulator(tk.Frame):
 
         tk.Button(self.homeFrame, text="Transaction History", highlightbackground='#ffcc00', fg='green',
                   command=self.transactionHistoryWindow).pack(side="left")
+        tk.Button(self.homeFrame, text="Transfer Funds", highlightbackground='#ffcc00', fg='green',
+                  command=self.transferFundsWindow).pack(side="right")
         tk.Button(self.homeFrame, text="Logout", highlightbackground='#ffcc00', fg='green',
-                  command=self.fromHomeToSignin).pack(side="right")
+                  command=self.confirmLogoutWindow).pack(side="bottom")
 
     def transactionHistoryWindow(self):
         self.homeFrame.destroy()
@@ -100,10 +102,25 @@ class Simulator(tk.Frame):
                 message = message + transaction.to_string() + "\n"
         tk.Message(self.transactionHistoryFrame, text=message, bg="black", fg='#ffcc00', width=450).pack()
 
-        btnBack = tk.Button(self.transactionHistoryFrame, text="Back", highlightbackground='#ffcc00', fg='green',
-                            command=self.fromHistoryToHome)
-        btnBack.configure(background="black")
-        btnBack.pack(side="left")
+        tk.Button(self.transactionHistoryFrame, text="Back", highlightbackground='#ffcc00', fg='green',
+                  command=self.fromHistoryToHome).pack(side="left")
+
+    def transferFundsWindow(self):
+        self.homeFrame.destroy()
+        self.transferFundsFrame = tk.Frame(self)
+        self.transferFundsFrame.pack()
+
+        tk.Label(self.transferFundsFrame, text="Enter Account ID: ", bg="black", fg='#ffcc00').pack()
+        self.entryTransferFundsAccountID = tk.Entry(self.transferFundsFrame)
+        self.entryTransferFundsAccountID.pack()
+        tk.Label(self.transferFundsFrame, text="Transaction Amount: ", bg="black", fg='#ffcc00').pack()
+        self.entryTransferFundsAmount = tk.Entry(self.transferFundsFrame)
+        self.entryTransferFundsAmount.pack()
+
+        tk.Button(self.transferFundsFrame, text="Back", highlightbackground='#ffcc00',
+                  fg='green', command=self.fromTransferToHome).pack(side="left")
+        tk.Button(self.transferFundsFrame, text="Okay", highlightbackground='#ffcc00',
+                  fg='green', command=self.transfer).pack(side="right")
 
     def fromHomeToSignin(self):
         self.homeFrame.destroy()
@@ -112,6 +129,10 @@ class Simulator(tk.Frame):
 
     def fromHistoryToHome(self):
         self.transactionHistoryFrame.destroy()
+        self.homeWindow()
+
+    def fromTransferToHome(self):
+        self.transferFundsFrame.destroy()
         self.homeWindow()
 
     def fromSigninToHome(self):
@@ -137,7 +158,7 @@ class Simulator(tk.Frame):
         tk.Button(self.adminHomeFrame, text="User Transaction", highlightbackground='#ffcc00', fg='green',
                   command=self.transactionWindow).pack()
         tk.Button(self.adminHomeFrame, text="Logout", highlightbackground='#ffcc00', fg='green',
-                  command=self.fromAdminToSignin).pack()
+                  command=self.confirmLogoutWindow).pack()
 
     def signupWindow(self):
         self.adminHomeFrame.destroy()
@@ -157,6 +178,9 @@ class Simulator(tk.Frame):
         tk.Label(self.signupFrame, text="Enter Password: ", bg="black", fg='#ffcc00').pack()
         self.entrySignupPassword = tk.Entry(self.signupFrame, show='*')
         self.entrySignupPassword.pack()
+        tk.Label(self.signupFrame, text="Confirm Password: ", bg="black", fg='#ffcc00').pack()
+        self.entrySignupConfirmPassword = tk.Entry(self.signupFrame, show='*')
+        self.entrySignupConfirmPassword.pack()
         self.adminCheck = tk.IntVar()
         self.cbSignupAdminAccount = tk.Checkbutton(self.signupFrame, text="Admin Account",
                                                    variable=self.adminCheck, onvalue=1)
@@ -220,7 +244,7 @@ class Simulator(tk.Frame):
 
             if (len(userInfo) == 0):
                 # todo add popup
-                self.showError("AccountID doesn't exist")
+                self.showErrorWindow("AccountID doesn't exist")
                 print("AccountID doesn't exist")
             else:
                 for row in userInfo:
@@ -248,57 +272,116 @@ class Simulator(tk.Frame):
 
         elif self.wdVar.get() == 0:
             # todo add pop up
-            self.showError("Select either withdraw or deposit")
+            self.showErrorWindow("Select either withdraw or deposit")
             print("Select either withdraw or deposit")
         elif len(self.entryTransactionAccountID.get()) == 0:
             # todo add pop up
-            self.showError("Enter Account ID")
+            self.showErrorWindow("Enter Account ID")
             print("Enter Account ID")
         elif len(self.entryTransactionAmount.get()) == 0:
             # todo add pop up
-            self.showError("Enter transaction amount")
+            self.showErrorWindow("Enter transaction amount")
             print("Enter transaction amount")
         else:
             # todo add pop up
-            self.showError("Internal Error")
+            self.showErrorWindow("Internal Error")
+            print("Internal Error")
+
+    def transfer(self):
+        if (len(self.entryTransferFundsAmount.get()) != 0) and (len(self.entryTransferFundsAccountID.get()) != 0):
+            accountID = int(self.entryTransferFundsAccountID.get())
+            amount = float(self.entryTransferFundsAmount.get())
+            self.cursor.execute("SELECT *"
+                                "FROM Users "
+                                "WHERE userID = " + str(accountID) + ";"
+                                )
+
+            userInfo = self.cursor.fetchall()
+
+            if (len(userInfo) == 0):
+                # todo add popup
+                self.showErrorWindow("AccountID doesn't exist")
+                print("AccountID doesn't exist")
+            else:
+                for row in userInfo:
+                    firstName = row[1]
+                    lastName = row[2]
+                    password = row[4]
+                    balance = float(row[5])
+
+                tempAdmin = Admin("temp", "temp", "temp", "temp")
+                userForTransaction = User(firstName, lastName, password, balance, accountID, self.transactionLog)
+
+                tempAdmin.user_withdraw(self.userInstance, amount)
+                self.db.reconnect()
+                tempAdmin.user_deposit(userForTransaction, amount)
+                self.db.reconnect()
+
+                message = "Transferred Funds to " + str(userForTransaction.get_accountid())
+                transfer = Transaction(self.today, message, amount, self.userInstance.get_accountid())
+                self.transactionLog.append(transfer)
+                self.transactionLog[len(self.transactionLog) - 1].record_transaction()
+
+                message = "Received from " + str(self.userInstance.get_accountid())
+                transfer = Transaction(self.today, message, amount, userForTransaction.get_accountid())
+                self.transactionLog.append(transfer)
+                self.transactionLog[len(self.transactionLog) - 1].record_transaction()
+
+                self.fromTransferToHome()
+
+        elif len(self.entryTransferFundsAccountID.get()) == 0:
+            # todo add pop up
+            self.showErrorWindow("Enter Account ID")
+            print("Enter Account ID")
+        elif len(self.entryTransferFundsAmount.get()) == 0:
+            # todo add pop up
+            self.showErrorWindow("Enter transaction amount")
+            print("Enter transaction amount")
+        else:
+            # todo add pop up
+            self.showErrorWindow("Internal Error")
             print("Internal Error")
 
     def createAccount(self):
         if ((len(self.entrySignupFirstName.get()) != 0) and (len(self.entrySignupLastName.get()) != 0) and
-                (len(self.entrySignupEmail.get()) != 0) and (len(self.entrySignupPassword.get()) != 0)):
-            firstName = self.entrySignupFirstName.get()
-            lastName = self.entrySignupLastName.get()
-            email = self.entrySignupEmail.get()
-            password = self.entrySignupPassword.get()
-            adminPrivilege = self.adminCheck.get()
+                (len(self.entrySignupEmail.get()) != 0) and (len(self.entrySignupPassword.get()) != 0) and
+                (len(self.entrySignupConfirmPassword.get()) != 0)):
+            if (self.entrySignupPassword.get() == self.entrySignupConfirmPassword.get()):
+                firstName = self.entrySignupFirstName.get()
+                lastName = self.entrySignupLastName.get()
+                email = self.entrySignupEmail.get()
+                password = self.entrySignupPassword.get()
+                adminPrivilege = self.adminCheck.get()
 
-            insertCommand = "INSERT INTO Users (userFirstName, userLastName, userEmail, userPassword, admin) " \
-                            "VALUES( '" + firstName + "', '" + lastName + "', '" + email + "', '" + password + \
-                            "', '" + str(adminPrivilege) + "');"
-            self.cursor.execute(insertCommand)
-            self.db.commit()
+                insertCommand = "INSERT INTO Users (userFirstName, userLastName, userEmail, userPassword, admin) " \
+                                "VALUES( '" + firstName + "', '" + lastName + "', '" + email + "', '" + password + \
+                                "', '" + str(adminPrivilege) + "');"
+                self.cursor.execute(insertCommand)
+                self.db.commit()
 
-            self.fromSignupToAdmin()
+                self.fromSignupToAdmin()
+            else:
+                self.showErrorWindow("Passwords Do Not Match")
         else:
             if len(self.entrySignupFirstName.get()) == 0:
                 # todo add popup
-                self.showError("No First Name Entered")
+                self.showErrorWindow("No First Name Entered")
                 print("No First Name")
             elif len(self.entrySignupLastName.get()) == 0:
                 # todo add popup
-                self.showError("No Last Name Entered")
+                self.showErrorWindow("No Last Name Entered")
                 print("No Last Name")
             elif len(self.entrySignupEmail.get()) == 0:
                 # todo add popup
-                self.showError("No Email Entered")
+                self.showErrorWindow("No Email Entered")
                 print("No Email")
             elif len(self.entrySignupPassword.get()) == 0:
                 # todo add popup
-                self.showError("No Password Entered")
+                self.showErrorWindow("No Password Entered")
                 print("No Password")
             else:
                 # todo add popup
-                self.showError("Internal Error")
+                self.showErrorWindow("Internal Error")
                 print("Error")
 
     def signinProcess(self):
@@ -330,29 +413,49 @@ class Simulator(tk.Frame):
                     self.fromSigninToHome()
             else:
                 # todo add popup
-                self.showError("Password is incorrect")
+                self.showErrorWindow("Password is incorrect")
                 print("Password is wrong")
         else:
             if len(self.entrySigninEmail.get()) == 0:
                 # todo add popup
-                self.showError("No Email Entered")
+                self.showErrorWindow("No Email Entered")
                 print("No Email")
             elif len(self.entrySigninPassword.get()) == 0:
                 # todo add popup
-                self.showError("No Password Entered")
+                self.showErrorWindow("No Password Entered")
                 print("No Password")
             else:
                 # todo add popup
-                self.showError("Internal Error")
+                self.showErrorWindow("Internal Error")
                 print("Internal Error")
 
-    def showError(self, message):
+    # Extra Windows
+    def showErrorWindow(self, message):
         errorMessage = tk.Tk()
         errorMessage.title("Error")
 
         tk.Label(errorMessage, text=message, bg="black", fg='#ffcc00').pack()
         tk.Button(errorMessage, text="Okay", highlightbackground='#ffcc00', fg='green',
                   command=errorMessage.destroy).pack()
+
+    def confirmLogoutWindow(self):
+        self.confirmLogout = tk.Tk()
+        self.confirmLogout.title("Logout?")
+        tk.Label(self.confirmLogout, text="You will be logged out of your account. Do you wish to continue?").pack()
+        tk.Button(self.confirmLogout, text="Yes", highlightbackground='#ffcc00', fg='green',
+                  command=self.toSignin).pack(side="left")
+        tk.Button(self.confirmLogout, text="No", highlightbackground='#ffcc00', fg='green',
+                  command=self.confirmLogout.destroy).pack(side="right")
+
+    def toSignin(self):
+        self.confirmLogout.destroy()
+
+        if self.adminHomeFrame.winfo_exists():
+            self.adminHomeFrame.destroy()
+        else:
+            self.homeFrame.destroy()
+
+        self.signinWindow()
 
 
 root = tk.Tk()
