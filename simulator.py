@@ -23,6 +23,7 @@ class Simulator(tk.Frame):
             database="bankingsimulator"
         )
         self.cursor = self.db.cursor()
+        self.adminInstance = Admin("root", "root", "root123", 1)
         self.today = date.today().strftime("%m/%d/%y")
         self.transactionLog = []
         self.initializeTransactionLog()
@@ -77,10 +78,12 @@ class Simulator(tk.Frame):
         myfont = font.Font(size=20)
         tk.Label(self.homeFrame, text="Welcome, " + self.userInstance.get_firstname() + " " +
                                       self.userInstance.get_lastname(), fg="green", bg="black", font=myfont).pack()
-        tk.Label(self.homeFrame, text="Balance: " + str(self.userInstance.get_balance()), bg="black",
-                 fg='#ffcc00').pack()
+        myfont = font.Font(size=14)
         tk.Label(self.homeFrame, text="Account ID: " + str(self.userInstance.get_accountid()), bg="black",
-                 fg='#ffcc00').pack()
+                 fg='green', font=myfont).pack()
+        myfont = font.Font(size=30)
+        tk.Label(self.homeFrame, text="Balance: " + str(self.userInstance.get_balance()), bg="black",
+                 fg='#ffcc00', font=myfont).pack()
 
         tk.Button(self.homeFrame, text="Transaction History", highlightbackground='#ffcc00', fg='green',
                   command=self.transactionHistoryWindow).pack(side="left")
@@ -229,12 +232,14 @@ class Simulator(tk.Frame):
         self.transactionFrame.destroy()
         self.adminHomeWindow()
 
-    # Processes
+    # Processes UI
     def withdrawDeposit(self):
         if (len(self.entryTransactionAmount.get()) != 0) and (
                 len(self.entryTransactionAccountID.get()) != 0) and self.wdVar.get() != 0:
             accountID = int(self.entryTransactionAccountID.get())
             amount = float(self.entryTransactionAmount.get())
+            wdVariable = self.wdVar.get()
+
             self.cursor.execute("SELECT *"
                                 "FROM Users "
                                 "WHERE userID = " + str(accountID) + ";"
@@ -242,48 +247,26 @@ class Simulator(tk.Frame):
 
             userInfo = self.cursor.fetchall()
 
-            if (len(userInfo) == 0):
-                # todo add popup
+            if len(userInfo) == 0:
                 self.showErrorWindow("AccountID doesn't exist")
                 print("AccountID doesn't exist")
             else:
-                for row in userInfo:
-                    firstName = row[1]
-                    lastName = row[2]
-                    password = row[4]
-                    balance = float(row[5])
-
-                userForTransaction = User(firstName, lastName, password, balance, accountID, self.transactionLog)
-
-                if self.wdVar.get() == 2:
-                    self.adminInstance.user_deposit(userForTransaction, amount)
-                    self.db.reconnect()
-                    deposit = Transaction(self.today, "Deposit", amount, userForTransaction.get_accountid())
-                    self.transactionLog.append(deposit)
-                    self.transactionLog[len(self.transactionLog) - 1].record_transaction()
+                if wdVariable == 1 and amount > float(userInfo[0][5]):
+                    self.showErrorWindow("Not enough funds in account")
                 else:
-                    self.adminInstance.user_withdraw(userForTransaction, amount)
-                    self.db.reconnect()
-                    withdraw = Transaction(self.today, "Withdraw", amount, userForTransaction.get_accountid())
-                    self.transactionLog.append(withdraw)
-                    self.transactionLog[len(self.transactionLog) - 1].record_transaction()
-
-                self.fromTransactionToAdmin()
+                    self.withdrawDepositProcess(accountID, amount, userInfo, wdVariable)
+                    self.fromTransactionToAdmin()
 
         elif self.wdVar.get() == 0:
-            # todo add pop up
             self.showErrorWindow("Select either withdraw or deposit")
             print("Select either withdraw or deposit")
         elif len(self.entryTransactionAccountID.get()) == 0:
-            # todo add pop up
             self.showErrorWindow("Enter Account ID")
             print("Enter Account ID")
         elif len(self.entryTransactionAmount.get()) == 0:
-            # todo add pop up
             self.showErrorWindow("Enter transaction amount")
             print("Enter transaction amount")
         else:
-            # todo add pop up
             self.showErrorWindow("Internal Error")
             print("Internal Error")
 
@@ -298,8 +281,7 @@ class Simulator(tk.Frame):
 
             userInfo = self.cursor.fetchall()
 
-            if (len(userInfo) == 0):
-                # todo add popup
+            if len(userInfo) == 0:
                 self.showErrorWindow("AccountID doesn't exist")
                 print("AccountID doesn't exist")
             else:
@@ -330,15 +312,12 @@ class Simulator(tk.Frame):
                 self.fromTransferToHome()
 
         elif len(self.entryTransferFundsAccountID.get()) == 0:
-            # todo add pop up
             self.showErrorWindow("Enter Account ID")
             print("Enter Account ID")
         elif len(self.entryTransferFundsAmount.get()) == 0:
-            # todo add pop up
             self.showErrorWindow("Enter transaction amount")
             print("Enter transaction amount")
         else:
-            # todo add pop up
             self.showErrorWindow("Internal Error")
             print("Internal Error")
 
@@ -346,7 +325,7 @@ class Simulator(tk.Frame):
         if ((len(self.entrySignupFirstName.get()) != 0) and (len(self.entrySignupLastName.get()) != 0) and
                 (len(self.entrySignupEmail.get()) != 0) and (len(self.entrySignupPassword.get()) != 0) and
                 (len(self.entrySignupConfirmPassword.get()) != 0)):
-            if (self.entrySignupPassword.get() == self.entrySignupConfirmPassword.get()):
+            if self.entrySignupPassword.get() == self.entrySignupConfirmPassword.get():
                 firstName = self.entrySignupFirstName.get()
                 lastName = self.entrySignupLastName.get()
                 email = self.entrySignupEmail.get()
@@ -364,23 +343,18 @@ class Simulator(tk.Frame):
                 self.showErrorWindow("Passwords Do Not Match")
         else:
             if len(self.entrySignupFirstName.get()) == 0:
-                # todo add popup
                 self.showErrorWindow("No First Name Entered")
                 print("No First Name")
             elif len(self.entrySignupLastName.get()) == 0:
-                # todo add popup
                 self.showErrorWindow("No Last Name Entered")
                 print("No Last Name")
             elif len(self.entrySignupEmail.get()) == 0:
-                # todo add popup
                 self.showErrorWindow("No Email Entered")
                 print("No Email")
             elif len(self.entrySignupPassword.get()) == 0:
-                # todo add popup
                 self.showErrorWindow("No Password Entered")
                 print("No Password")
             else:
-                # todo add popup
                 self.showErrorWindow("Internal Error")
                 print("Error")
 
@@ -393,41 +367,64 @@ class Simulator(tk.Frame):
                                 )
 
             passwordCheck = self.cursor.fetchall()
+            password = ""
 
-            for row in passwordCheck:
-                firstName = row[0]
-                lastName = row[1]
-                password = row[2]
-                balance = row[3]
-                adminPrivilege = row[4]
-                accountID = row[5]
-
-            if password == self.entrySigninPassword.get():
-                if adminPrivilege == 1:
-                    # Create admin instance and open to admin home screen
-                    self.adminInstance = Admin(firstName, lastName, password, accountID)
-                    self.adminHomeWindow()
-                else:
-                    # Create user instance and open home screen
-                    self.userInstance = User(firstName, lastName, password, balance, accountID, self.transactionLog)
-                    self.fromSigninToHome()
+            if len(passwordCheck) == 0:
+                self.showErrorWindow("Email not found")
             else:
-                # todo add popup
-                self.showErrorWindow("Password is incorrect")
-                print("Password is wrong")
+                for row in passwordCheck:
+                    firstName = row[0]
+                    lastName = row[1]
+                    password = row[2]
+                    balance = row[3]
+                    adminPrivilege = row[4]
+                    accountID = row[5]
+
+                if password == self.entrySigninPassword.get():
+                    if adminPrivilege == 1:
+                        # Create admin instance and open to admin home screen
+                        self.adminInstance = Admin(firstName, lastName, password, accountID)
+                        self.adminHomeWindow()
+                    else:
+                        # Create user instance and open home screen
+                        self.userInstance = User(firstName, lastName, password, balance, accountID, self.transactionLog)
+                        self.fromSigninToHome()
+                else:
+                    self.showErrorWindow("Password is incorrect")
+                    print("Password is wrong")
         else:
             if len(self.entrySigninEmail.get()) == 0:
-                # todo add popup
                 self.showErrorWindow("No Email Entered")
                 print("No Email")
             elif len(self.entrySigninPassword.get()) == 0:
-                # todo add popup
                 self.showErrorWindow("No Password Entered")
                 print("No Password")
             else:
-                # todo add popup
                 self.showErrorWindow("Internal Error")
                 print("Internal Error")
+
+    # Processes Non UI
+    def withdrawDepositProcess(self, accountID, amount, userInfo, wdVariable):
+        for row in userInfo:
+            firstName = row[1]
+            lastName = row[2]
+            password = row[4]
+            balance = float(row[5])
+
+        userForTransaction = User(firstName, lastName, password, balance, accountID, self.transactionLog)
+
+        if wdVariable == 2:
+            self.adminInstance.user_deposit(userForTransaction, amount)
+            self.db.reconnect()
+            deposit = Transaction(self.today, "Deposit", amount, userForTransaction.get_accountid())
+            self.transactionLog.append(deposit)
+            self.transactionLog[len(self.transactionLog) - 1].record_transaction()
+        else:
+            self.adminInstance.user_withdraw(userForTransaction, amount)
+            self.db.reconnect()
+            withdraw = Transaction(self.today, "Withdraw", amount, userForTransaction.get_accountid())
+            self.transactionLog.append(withdraw)
+            self.transactionLog[len(self.transactionLog) - 1].record_transaction()
 
     # Extra Windows
     def showErrorWindow(self, message):
@@ -450,10 +447,15 @@ class Simulator(tk.Frame):
     def toSignin(self):
         self.confirmLogout.destroy()
 
-        if self.adminHomeFrame.winfo_exists():
+        try:
             self.adminHomeFrame.destroy()
-        else:
+        except AttributeError:
             self.homeFrame.destroy()
+
+        try:
+            self.homeFrame.destroy()
+        except AttributeError:
+            print("Oh well")
 
         self.signinWindow()
 

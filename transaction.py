@@ -1,5 +1,4 @@
 import mysql.connector
-from user import User
 
 
 class Transaction:
@@ -30,11 +29,17 @@ class Transaction:
         return self.amount
 
     def record_transaction(self):
-        insertCommand = "INSERT INTO Transactions (userID, transactDate, transactType, transactAmount) " \
-                        "VALUES( " + str(self.accountid) + ", '" + self.date + "', '" + self.type + "', " \
-                        + str(self.amount) + ")"
-        self.cursor.execute(insertCommand)
-        self.db.commit()
+        try:
+            insertCommand = "INSERT INTO Transactions (userID, transactDate, transactType, transactAmount) " \
+                            "VALUES( " + str(self.accountid) + ", '" + self.date + "', '" + self.type + "', " \
+                            + str(self.amount) + ")"
+            self.cursor.execute(insertCommand)
+            self.db.commit()
+        except:
+            return False
+
+        return True
+
 
     def to_string(self):
         display = "Date: " + self.date + "\tType: " + self.type + "\tAmount: " + str(self.amount)

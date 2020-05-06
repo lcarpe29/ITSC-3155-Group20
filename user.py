@@ -1,8 +1,7 @@
 import mysql.connector
-
+from transaction import Transaction
 
 class User:
-
     def __init__(self, firstname, lastname, password, balance, accountid, generalTransactionLog):
         self.firstname = firstname
         self.lastname = lastname
@@ -36,32 +35,6 @@ class User:
 
     def get_userlog(self):
         return self.userlog
-
-    # setter methods
-
-    # def set_firstname(self, x):
-    #     self.firstname = x
-    #     command = "UPDATE Users " \
-    #               "SET userFirstName = '" + str(x) + "' " \
-    #                                                  "WHERE userID = " + str(self.accountid) + ";"
-    #     self.cursor.execute(command)
-    #     self.db.commit()
-    #
-    # def set_lastname(self, x):
-    #     self.lastname = x
-    #     command = "UPDATE Users " \
-    #               "SET userLastName = '" + str(x) + "' " \
-    #                                                 "WHERE userID = " + str(self.accountid) + ";"
-    #     self.cursor.execute(command)
-    #     self.db.commit()
-    #
-    # def set_password(self, x):
-    #     self.password = x
-    #     command = "UPDATE Users " \
-    #               "SET userPassword = '" + str(x) + "' " \
-    #                                                 "WHERE userID = " + str(self.accountid) + ";"
-    #     self.cursor.execute(command)
-    #     self.db.commit()
 
     def set_balance(self, x):
         self.balance = float(x)

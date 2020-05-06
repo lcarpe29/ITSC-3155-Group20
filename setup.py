@@ -35,4 +35,7 @@ mycursor.execute(
 insertCommand = "INSERT INTO Users (userFirstName, userLastName, userEmail, userPassword, admin) " \
                 "VALUES( 'root', 'root', 'root@uncc.edu', 'root123', 1);"
 mycursor.execute(insertCommand)
+insertCommand = "INSERT INTO Users (userFirstName, userLastName, userEmail, userPassword, admin) " \
+                "VALUES( 'Norm', 'Niner', 'normniner@uncc.edu', 'Password', 0);"
+mycursor.execute(insertCommand)
 mydb.commit()
